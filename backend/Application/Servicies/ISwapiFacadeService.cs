@@ -5,10 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.Interfaces
+namespace Application.Servicies
 {
     public interface ISwapiFacadeService
     {
         Task<IEnumerable<Starship>> GetStarshipsAsync(string? search = null, CancellationToken ct = default);
+        Task<EnrichedStarship> GetEnrichedStarshipByIdAsync(int id, string targetCurrency, CancellationToken ct = default);
     }
 }
