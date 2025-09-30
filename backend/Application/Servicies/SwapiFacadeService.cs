@@ -15,15 +15,15 @@ using Microsoft.Extensions.ObjectPool;
 namespace Application.Servicies
 {
 
-    public class SwapiFacade : ISwapiFacadeService
+    public class SwapiFacadeService : ISwapiFacadeService
     {
         private readonly ISwapiClient _client;
-        private readonly ILogger<SwapiFacade> _logger;
+        private readonly ILogger<SwapiFacadeService> _logger;
         private readonly IValidator<Starship> _validator;
         private readonly ObjectPool<ValidationHandler> _validationPool;
         private readonly ICorrelationContextAccessor _correlationAccessor;
 
-        public SwapiFacade(ISwapiClient client, ILogger<SwapiFacade> logger, IValidator<Starship> validator, ObjectPool<ValidationHandler> validationPool, ICorrelationContextAccessor correlationAccessor)
+        public SwapiFacadeService(ISwapiClient client, ILogger<SwapiFacadeService> logger, IValidator<Starship> validator, ObjectPool<ValidationHandler> validationPool, ICorrelationContextAccessor correlationAccessor)
         {
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));

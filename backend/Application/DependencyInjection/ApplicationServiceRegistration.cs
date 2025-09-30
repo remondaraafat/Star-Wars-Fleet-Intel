@@ -1,5 +1,9 @@
-﻿using Application.Interfaces;
+﻿using Application.Handlers;
+using Application.Interfaces;
+using Application.Servicies;
+using Application.Validators;
 using CorrelationId.Abstractions;
+using Domain.Models;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Configuration;
@@ -18,25 +22,17 @@ namespace StarWars.Application
                 cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
-            //services.AddTransient<ISwapiFacadeService, SwapiFacadeService>();
-            //services.AddValidatorsFromAssembly(typeof(StarshipValidator).Assembly); // FluentValidation
-            //services.AddSingleton<ObjectPoolProvider, DefaultObjectPoolProvider>(); // ObjectPool
-            //services.AddSingleton<ObjectPool<ValidationHandler>>(sp =>
-            //  sp.GetRequiredService<ObjectPoolProvider>().Create(new DefaultPooledObjectPolicy<ValidationHandler>()));
-            //services.AddScoped<ICorrelationContextAccessor, Infrastructure.CorrelationContextAccessor>(); // CorrelationId
+            services.AddSingleton<ISwapiFacadeService, SwapiFacadeService>();
+            services.AddSingleton<IValidator<Starship>, StarshipValidator>();
+            services.AddSingleton<IStarshipListValidationHandler, ValidationHandler>();
+            services.AddSingleton<ObjectPoolProvider, DefaultObjectPoolProvider>();
+            services.AddSingleton<ObjectPool<ValidationHandler>>(provider =>
+            {
+                var poolProvider = provider.GetRequiredService<ObjectPoolProvider>();
+                return poolProvider.Create(new ValidationHandlerPolicy(provider));
+            });
 
-//            services.AddHttpClient<SwapiClient>(c =>
-//            {
-//                c.BaseAddress = new Uri(builder.Configuration["Swapi:BaseUrl"]);
-//            })
-//.AddPolicyHandler(HttpPolicyExtensions
-//    .HandleTransientHttpError()
-//    .WaitAndRetryAsync(new[]
-//    {
-//        TimeSpan.FromSeconds(1),
-//        TimeSpan.FromSeconds(2),
-//        TimeSpan.FromSeconds(4)
-//    }));
+
             return services;
         }
     }
