@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Application.Validators;
 using Domain.Models;
 using FluentValidation;
+using FluentValidation.Results;
 namespace Application.Handlers
 {
 
-    public class ValidationHandler : IStarshipListHandler
+    public class ValidationHandler : IStarshipListValidationHandler
     {
         private readonly IValidator<Starship> _validator;
 
@@ -19,13 +21,17 @@ namespace Application.Handlers
 
         public async Task<IEnumerable<Starship>> HandleAsync(IEnumerable<Starship> starships, CancellationToken ct = default)
         {
+            var validatedStarships = new List<Starship>();
             foreach (var starship in starships)
             {
-                var result = await _validator.ValidateAsync(starship, ct);
+                ValidationResult result = await _validator.ValidateAsync(starship, ct);
                 if (!result.IsValid)
-                    throw new ValidationException(result.Errors);
+                {
+                    throw new ValidationException($"Validation failed for starship {starship.Name}: {string.Join(", ", result.Errors.Select(e => e.ErrorMessage))}");
+                }
+                validatedStarships.Add(starship);
             }
-            return starships;
+            return validatedStarships;
         }
     }
 }

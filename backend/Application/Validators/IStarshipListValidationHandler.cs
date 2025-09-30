@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.Handlers
+namespace Application.Validators
 {
 
-    public interface IStarshipListHandler
+    public interface IStarshipListValidationHandler
     {
         Task<IEnumerable<Starship>> HandleAsync(IEnumerable<Starship> starships, CancellationToken ct = default);
     }
