@@ -2,7 +2,7 @@
 using API.Extensions;
 using CorrelationId;
 using CorrelationId.DependencyInjection;
-//using Infrastructure.DependencyInjection;
+using Infrastructure.DependencyInjection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -30,7 +30,7 @@ namespace API
 
             // Add services to the container.
             builder.Services.AddApplicationServices();
-            //builder.Services.AddInfrastructure(builder.Configuration);
+            builder.Services.AddInfrastructure(builder.Configuration);
             builder.Services.ConfigureSwagger();
             builder.Services.AddControllers();
             
