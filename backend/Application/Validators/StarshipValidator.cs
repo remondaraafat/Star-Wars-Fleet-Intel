@@ -19,28 +19,54 @@ namespace Application.Validators
                 .NotEmpty().WithMessage("Starship model cannot be empty.");
             RuleFor(s => s.Manufacturer)
                 .NotEmpty().WithMessage("Starship manufacturer cannot be empty.");
-            RuleFor(s => s.CostInCredits)
-                .Must(c => c == "unknown" || decimal.TryParse(c, out _))
+            RuleFor(s => s.Cost_In_Credits)
+                .Must(c => c == "unknown" || decimal.TryParse(c.Replace(",", ""), out _))
                 .WithMessage("Cost in credits must be a valid number or 'unknown'.");
+
             RuleFor(s => s.Length)
-                .Must(l => double.TryParse(l, out _))
-                .WithMessage("Length must be a valid number.");
+                 .Must(l => l == "unknown" || double.TryParse(l.Replace(",", ""), out _))
+                 .WithMessage("Length must be a valid number or 'unknown'.");
             RuleFor(s => s.Crew)
                 .NotEmpty().WithMessage("Crew cannot be empty.");
             RuleFor(s => s.Passengers)
                 .NotEmpty().WithMessage("Passengers cannot be empty.");
-            RuleFor(s => s.MaxAtmospheringSpeed)
-                .Must(s => s == "n/a" || int.TryParse(s, out _))
-                .WithMessage("Max atmosphering speed must be a valid number or 'n/a'.");
-            RuleFor(s => s.HyperdriveRating)
-                .Must(h => string.IsNullOrEmpty(h) || double.TryParse(h, out _))
-                .WithMessage("Hyperdrive rating must be a valid number or empty.");
+            RuleFor(s => s.Max_Atmosphering_Speed)
+                .Must(s =>
+                    string.IsNullOrEmpty(s) ||
+                    s == "n/a" ||
+                    s == "unknown" ||
+                    s == "none" ||
+                    int.TryParse(
+                        new string(s.Where(char.IsDigit).ToArray()), // keep only digits
+                        out _
+                    )
+                )
+                .WithMessage("Max atmosphering speed must be a valid number, 'n/a', 'unknown', or 'none'.");
+
+
+            RuleFor(s => s.Hyperdrive_Rating)
+                .Must(h =>
+                    string.IsNullOrEmpty(h) ||
+                    h == "unknown" ||
+                    double.TryParse(h, out _)
+                )
+                .WithMessage("Hyperdrive rating must be a valid number or 'unknown'.");
+
             RuleFor(s => s.MGLT)
-                .Must(m => string.IsNullOrEmpty(m) || int.TryParse(m, out _))
-                .WithMessage("MGLT must be a valid number or empty.");
-            RuleFor(s => s.CargoCapacity)
-                .Must(c => string.IsNullOrEmpty(c) || double.TryParse(c, out _))
-                .WithMessage("Cargo capacity must be a valid number or empty.");
+                .Must(m =>
+                    string.IsNullOrEmpty(m) ||
+                    m == "unknown" ||
+                    int.TryParse(m, out _)
+                )
+                .WithMessage("MGLT must be a valid number or 'unknown'.");
+
+            RuleFor(s => s.Cargo_Capacity)
+                .Must(c =>
+                    string.IsNullOrEmpty(c) ||
+                    c == "unknown" ||
+                    double.TryParse(c.Replace(",", ""), out _)
+                )
+                .WithMessage("Cargo capacity must be a valid number or 'unknown'.");
             RuleFor(s => s.Consumables)
                 .NotEmpty().WithMessage("Consumables cannot be empty.");
         }

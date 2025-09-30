@@ -24,11 +24,9 @@ namespace Infrastructure.DependencyInjection
                 .Validate(s => s.TimeoutSeconds > 0, "TimeoutSeconds must be > 0");
 
             // Register HttpClient using the options
-            services.AddHttpClient<ISwapiClient,SwapiClient>((sp, client) =>
+            services.AddHttpClient<ISwapiClient, SwapiClient>((sp, client) =>
             {
-                // Get the bound settings
                 var settings = sp.GetRequiredService<IOptions<SwapiClientSettings>>().Value;
-
                 client.BaseAddress = new Uri(settings.BaseUrl);
                 client.Timeout = TimeSpan.FromSeconds(settings.TimeoutSeconds);
             })
@@ -43,7 +41,8 @@ namespace Infrastructure.DependencyInjection
 
             // Register other services
             services.AddTransient<IFakeSwapiProvider, FakeSwapiProvider>();
-            services.AddCorrelationId();
+            services.AddDefaultCorrelationId();
+
 
             return services;
         }

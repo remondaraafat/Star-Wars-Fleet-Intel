@@ -23,14 +23,20 @@ namespace Infrastructure.Client
         private readonly IFakeSwapiProvider _fakeProvider;
         private readonly ICorrelationContextAccessor _correlationAccessor;
 
-        public SwapiClient(IHttpClientFactory factory, IConfiguration config, ILogger<SwapiClient> logger, IFakeSwapiProvider fakeProvider, ICorrelationContextAccessor correlationAccessor)
+        public SwapiClient(
+                            HttpClient httpClient,
+                            IConfiguration config,
+                            ILogger<SwapiClient> logger,
+                            IFakeSwapiProvider fakeProvider,
+                            ICorrelationContextAccessor correlationAccessor)
         {
-            _httpClient = factory.CreateClient(nameof(SwapiClient));
+            _httpClient = httpClient;
             _logger = logger;
             _useFakeData = config.GetValue<bool>("SwapiClient:UseFakeData");
             _fakeProvider = fakeProvider;
             _correlationAccessor = correlationAccessor;
         }
+
 
         public async Task<IEnumerable<Starship>> GetStarshipsAsync(string endpoint, CancellationToken ct = default)
         {
@@ -52,11 +58,15 @@ namespace Infrastructure.Client
             {
                 _httpClient.DefaultRequestHeaders.Remove("X-Correlation-Id");
                 _httpClient.DefaultRequestHeaders.Add("X-Correlation-Id", _correlationAccessor.CorrelationContext.CorrelationId);
+
                 var response = await _httpClient.GetAsync(endpoint, ct);
                 response.EnsureSuccessStatusCode();
                 var content = await response.Content.ReadAsStringAsync(ct);
-                var result = JsonSerializer.Deserialize<Starship[]>(content, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
-                return result ?? Enumerable.Empty<Starship>();
+
+                var result = JsonSerializer.Deserialize<SwapiListResponse<Starship>>(content,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                return result?.Results ?? Enumerable.Empty<Starship>();
             }
             catch (HttpRequestException ex)
             {
@@ -64,6 +74,7 @@ namespace Infrastructure.Client
                 throw;
             }
         }
+
 
         public async Task<Starship> GetStarshipByIdAsync(int id, CancellationToken ct = default)
         {

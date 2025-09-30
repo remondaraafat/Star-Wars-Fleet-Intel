@@ -9,19 +9,22 @@ namespace Domain.Models
 {
     public class Starship : BaseEntity
     {
-        public string Name { get; set; }
-        public string Model { get; set; }
-        public string Manufacturer { get; set; }
-        public string CostInCredits { get; set; }
-        public string Length { get; set; }
-        public string Crew { get; set; }
-        public string Passengers { get; set; }
-        public string MaxAtmospheringSpeed { get; set; }
-        public string HyperdriveRating { get; set; }
-        public string MGLT { get; set; }
-        public string CargoCapacity { get; set; }
-        public string Consumables { get; set; }
-        public IEnumerable<string> Films { get; set; }  // URLs from SWAPI
-        public IEnumerable<string> Pilots { get; set; } // URLs from SWAPI
+        public string Name { get; set; } = string.Empty;
+        public string Model { get; set; } = string.Empty;
+        public string Manufacturer { get; set; } = string.Empty;
+        public string Cost_In_Credits { get; set; } = string.Empty;
+        public string Length { get; set; } = string.Empty;
+        public string Max_Atmosphering_Speed { get; set; } = string.Empty;
+        public string Crew { get; set; } = string.Empty;
+        public string Passengers { get; set; } = string.Empty;
+        public string Cargo_Capacity { get; set; } = string.Empty;
+        public string Consumables { get; set; } = string.Empty;
+        public string Hyperdrive_Rating { get; set; } = string.Empty;
+        public string MGLT { get; set; } = string.Empty;
+        public string Starship_Class { get; set; } = string.Empty;
+        public List<string> Pilots { get; set; } = new();
+        public List<string> Films { get; set; } = new();
+        public DateTime Created { get; set; }
+        public DateTime Edited { get; set; }
     }
 }
