@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 
 namespace Domain.Models
 {
-    public class Person : BaseEntity
+    public class PersonDto:BaseEntity
     {
+
         public string Name { get; set; }
         public string Height { get; set; }
         public string Mass { get; set; }

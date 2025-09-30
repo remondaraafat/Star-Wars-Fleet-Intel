@@ -25,10 +25,10 @@ namespace API.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<StarshipResponse>> GetStarshipById(int id, CancellationToken ct = default)
+        public async Task<ActionResult<StarshipResponseDto>> GetStarshipById(int id, CancellationToken ct = default)
         {
-                var starship = await _swapiFacade.GetEnrichedStarshipByIdAsync(id, ct);
-                return Ok(starship);
+            StarshipResponseDto starshipResponse = await _swapiFacade.GetEnrichedStarshipByIdAsync(id, ct);
+                return Ok(starshipResponse);
         }
     }
 } 

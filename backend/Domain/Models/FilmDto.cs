@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 
 namespace Domain.Models
 {
-    public class Film : BaseEntity
+    public class FilmDto:BaseEntity
     {
+
         public string Title { get; set; }
         public int EpisodeId { get; set; }
         public string OpeningCrawl { get; set; }

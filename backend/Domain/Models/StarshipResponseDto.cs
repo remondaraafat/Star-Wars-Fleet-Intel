@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Models
 {
-    public class StarshipResponse : BaseEntity
+    public class StarshipResponseDto : BaseEntity
     {
         public string Name { get; set; }
         public string Model { get; set; }
@@ -21,7 +21,7 @@ namespace Domain.Models
         public string MGLT { get; set; }
         public string CargoCapacity { get; set; }
         public string Consumables { get; set; }
-        public IEnumerable<Film> Films { get; set; }
-        public IEnumerable<Person> Pilots { get; set; }
+        public List<FilmDto> Films { get; set; }
+        public List<PersonDto> Pilots { get; set; }
     }
 }

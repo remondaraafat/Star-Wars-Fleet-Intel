@@ -1,10 +1,11 @@
-﻿using Application.Interfaces;
-using Application.ChainHandler;
+﻿using Application.ChainHandler;
+using Application.Interfaces;
+using Application.Servicies;
 using Application.Validators;
-using Domain.Models;
-using Microsoft.Extensions.Logging;
 using CorrelationId.Abstractions;
+using Domain.Models;
 using FluentValidation;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.ObjectPool;
 using System;
 using System.Collections.Generic;
@@ -12,16 +13,14 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Application.Servicies
+namespace Application.Services
 {
     public class SwapiFacadeService : ISwapiFacadeService
     {
         private readonly ISwapiClient _client;
         private readonly ILogger<SwapiFacadeService> _logger;
         private readonly IValidator<Starship> _validator;
-        
         private readonly ICorrelationContextAccessor _correlationAccessor;
-
         private readonly ObjectPool<ValidationHandler> _validationPool;
 
         public SwapiFacadeService(
@@ -38,8 +37,7 @@ namespace Application.Servicies
             _correlationAccessor = correlationAccessor;
         }
 
-
-        public async Task<IEnumerable<Starship>> GetStarshipsAsync(string? search = null, CancellationToken ct = default)
+        public async Task<IEnumerable<StarshipResponseDto>> GetStarshipsAsync(string? search = null, CancellationToken ct = default)
         {
             using var scope = _logger.BeginScope(new Dictionary<string, object>
             {
@@ -58,20 +56,41 @@ namespace Application.Servicies
             {
                 var starships = await _client.GetStarshipsAsync(endpoint, ct);
 
-                // Build CoR: Sanitization -> Validation
+                // Chain of Responsibility: Sanitization -> Validation
                 var sanitizer = new SanitizationHandler();
                 var validatorHandler = _validationPool.Get();
                 sanitizer.SetNext(validatorHandler);
 
+                IEnumerable<Starship> processed;
                 try
                 {
-                    var processed = await sanitizer.HandleAsync(starships, ct);
-                    return processed;
+                    processed = await sanitizer.HandleAsync(starships, ct);
                 }
                 finally
                 {
                     _validationPool.Return(validatorHandler);
                 }
+
+                // Map domain objects to DTOs
+                var starshipDtos = processed.Select(s => new StarshipResponseDto
+                {
+                    Name = s.Name,
+                    Model = s.Model,
+                    Manufacturer = s.Manufacturer,
+                    CostInCredits = s.Cost_In_Credits,
+                    Length = s.Length,
+                    Crew = s.Crew,
+                    Passengers = s.Passengers,
+                    MaxAtmospheringSpeed = s.Max_Atmosphering_Speed,
+                    HyperdriveRating = s.Hyperdrive_Rating,
+                    MGLT = s.MGLT,
+                    CargoCapacity = s.Cargo_Capacity,
+                    Consumables = s.Consumables,
+                    Pilots = new List<PersonDto>(), // Leave empty for list endpoint
+                    Films = new List<FilmDto>()
+                }).ToList();
+
+                return starshipDtos;
             }
             catch (Exception ex)
             {
@@ -80,12 +99,12 @@ namespace Application.Servicies
             }
         }
 
-        public async Task<StarshipResponse> GetEnrichedStarshipByIdAsync(int id, CancellationToken ct = default)
+        public async Task<StarshipResponseDto> GetEnrichedStarshipByIdAsync(int id, CancellationToken ct = default)
         {
             using var scope = _logger.BeginScope(new Dictionary<string, object>
             {
                 ["RequestId"] = Guid.NewGuid(),
-                ["Id"] = id,
+                ["StarshipId"] = id,
                 ["CorrelationId"] = _correlationAccessor.CorrelationContext.CorrelationId
             });
 
@@ -95,7 +114,7 @@ namespace Application.Servicies
             {
                 var starship = await _client.GetStarshipByIdAsync(id, ct);
 
-                // Build CoR: Sanitization -> Validation
+                // Chain of Responsibility: Sanitization -> Validation
                 var sanitizer = new SanitizationHandler();
                 var validatorHandler = _validationPool.Get();
                 sanitizer.SetNext(validatorHandler);
@@ -109,7 +128,30 @@ namespace Application.Servicies
                     _validationPool.Return(validatorHandler);
                 }
 
-                var response = new StarshipResponse
+                // Fetch pilots in parallel
+                var pilotTasks = (starship.Pilots ?? Enumerable.Empty<string>())
+                    .Select(url =>
+                    {
+                        if (int.TryParse(url.Split('/').LastOrDefault(s => !string.IsNullOrEmpty(s)), out var pilotId))
+                            return _client.GetPersonByIdAsync(pilotId, ct);
+                        return Task.FromResult<Person?>(null);
+                    });
+
+                var pilots = await Task.WhenAll(pilotTasks);
+
+                // Fetch films in parallel
+                var filmTasks = (starship.Films ?? Enumerable.Empty<string>())
+                    .Select(url =>
+                    {
+                        if (int.TryParse(url.Split('/').LastOrDefault(s => !string.IsNullOrEmpty(s)), out var filmId))
+                            return _client.GetFilmByIdAsync(filmId, ct);
+                        return Task.FromResult<Film?>(null);
+                    });
+
+                var films = await Task.WhenAll(filmTasks);
+
+                // Map to DTO
+                var responseDto = new StarshipResponseDto
                 {
                     Name = starship.Name,
                     Model = starship.Model,
@@ -123,29 +165,15 @@ namespace Application.Servicies
                     MGLT = starship.MGLT,
                     CargoCapacity = starship.Cargo_Capacity,
                     Consumables = starship.Consumables,
-                    Films = new List<Film>(),
-                    Pilots = new List<Person>()
+                    Pilots = pilots.Where(p => p != null)
+                                   .Select(p => new PersonDto { Name = p!.Name })
+                                   .ToList(),
+                    Films = films.Where(f => f != null)
+                                 .Select(f => new FilmDto { Title = f!.Title })
+                                 .ToList()
                 };
 
-                foreach (var pilotUrl in starship.Pilots ?? Enumerable.Empty<string>())
-                {
-                    if (int.TryParse(pilotUrl.Split('/').LastOrDefault(s => !string.IsNullOrEmpty(s)), out var pilotId))
-                    {
-                        var person = await _client.GetPersonByIdAsync(pilotId, ct);
-                        response.Pilots.ToList().Add(person);
-                    }
-                }
-
-                foreach (var filmUrl in starship.Films ?? Enumerable.Empty<string>())
-                {
-                    if (int.TryParse(filmUrl.Split('/').LastOrDefault(s => !string.IsNullOrEmpty(s)), out var filmId))
-                    {
-                        var film = await _client.GetFilmByIdAsync(filmId, ct);
-                        response.Films.ToList().Add(film);
-                    }
-                }
-
-                return response;
+                return responseDto;
             }
             catch (Exception ex)
             {
