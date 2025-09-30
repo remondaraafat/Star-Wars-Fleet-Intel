@@ -1,13 +1,12 @@
-﻿using CorrelationId;
-using CorrelationId.Abstractions;
+﻿using CorrelationId.DependencyInjection;
+using Infrastructure.Client;
 using Infrastructure.SwapiProvider;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
+using Polly;
+using Polly.Extensions.Http;
+using System.Net.Http;
 
 namespace Infrastructure.DependencyInjection
 {
@@ -15,15 +14,36 @@ namespace Infrastructure.DependencyInjection
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
-            //services.AddHttpClient<SwapiClient>(client =>
-            //{
-            //    client.BaseAddress = new Uri(configuration["SwapiClient:BaseUrl"]);
-            //    client.Timeout = TimeSpan.FromSeconds(configuration.GetValue<int>("SwapiClient:TimeoutSeconds"));
-            //});
-            //services.AddTransient<SwapiClient>();
+            // Bind settings
+            services.Configure<SwapiClientSettings>(configuration.GetSection("SwapiClient"));
+
+            // Optionally validate settings
+            services.AddOptions<SwapiClientSettings>()
+                .Validate(s => Uri.IsWellFormedUriString(s.BaseUrl, UriKind.Absolute), "SwapiClient:BaseUrl must be a valid URL")
+                .Validate(s => s.TimeoutSeconds > 0, "TimeoutSeconds must be > 0");
+
+            // Register HttpClient using the options
+            services.AddHttpClient<SwapiClient>((sp, client) =>
+            {
+                // Get the bound settings
+                var settings = sp.GetRequiredService<IOptions<SwapiClientSettings>>().Value;
+
+                client.BaseAddress = new Uri(settings.BaseUrl);
+                client.Timeout = TimeSpan.FromSeconds(settings.TimeoutSeconds);
+            })
+            .AddPolicyHandler(HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .WaitAndRetryAsync(new[]
+                {
+                    TimeSpan.FromSeconds(1),
+                    TimeSpan.FromSeconds(2),
+                    TimeSpan.FromSeconds(4)
+                }));
+
+            // Register other services
             services.AddTransient<IFakeSwapiProvider, FakeSwapiProvider>();
-            services.AddScoped<CorrelationContextAccessor>();
-            services.AddScoped<ICorrelationContextAccessor>(sp => sp.GetRequiredService<CorrelationContextAccessor>());
+            services.AddCorrelationId();
+
             return services;
         }
     }
