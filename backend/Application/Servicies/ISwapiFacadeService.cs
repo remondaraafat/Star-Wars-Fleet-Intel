@@ -10,6 +10,6 @@ namespace Application.Servicies
     public interface ISwapiFacadeService
     {
         Task<IEnumerable<Starship>> GetStarshipsAsync(string? search = null, CancellationToken ct = default);
-        Task<EnrichedStarship> GetEnrichedStarshipByIdAsync(int id, string targetCurrency, CancellationToken ct = default);
+        Task<StarshipResponse> GetEnrichedStarshipByIdAsync(int id, CancellationToken ct = default);
     }
 }

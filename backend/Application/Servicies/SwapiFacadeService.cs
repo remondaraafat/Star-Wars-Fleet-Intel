@@ -15,6 +15,7 @@ using Microsoft.Extensions.ObjectPool;
 namespace Application.Servicies
 {
 
+
     public class SwapiFacadeService : ISwapiFacadeService
     {
         private readonly ISwapiClient _client;
@@ -23,7 +24,12 @@ namespace Application.Servicies
         private readonly ObjectPool<ValidationHandler> _validationPool;
         private readonly ICorrelationContextAccessor _correlationAccessor;
 
-        public SwapiFacadeService(ISwapiClient client, ILogger<SwapiFacadeService> logger, IValidator<Starship> validator, ObjectPool<ValidationHandler> validationPool, ICorrelationContextAccessor correlationAccessor)
+        public SwapiFacadeService(
+            ISwapiClient client,
+            ILogger<SwapiFacadeService> logger,
+            IValidator<Starship> validator,
+            ObjectPool<ValidationHandler> validationPool,
+            ICorrelationContextAccessor correlationAccessor)
         {
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -34,7 +40,12 @@ namespace Application.Servicies
 
         public async Task<IEnumerable<Starship>> GetStarshipsAsync(string? search = null, CancellationToken ct = default)
         {
-            using var scope = _logger.BeginScope(new Dictionary<string, object> { ["RequestId"] = Guid.NewGuid(), ["Search"] = search ?? "none", ["CorrelationId"] = _correlationAccessor.CorrelationContext.CorrelationId });
+            using var scope = _logger.BeginScope(new Dictionary<string, object>
+            {
+                ["RequestId"] = Guid.NewGuid(),
+                ["Search"] = search ?? "none",
+                ["CorrelationId"] = _correlationAccessor.CorrelationContext.CorrelationId
+            });
             _logger.LogInformation("Fetching starships with search: {Search}", search);
 
             string endpoint = "starships/";
@@ -61,15 +72,30 @@ namespace Application.Servicies
             }
         }
 
-        public async Task<EnrichedStarship> GetEnrichedStarshipByIdAsync(int id, string targetCurrency, CancellationToken ct = default)
+        public async Task<StarshipResponse> GetEnrichedStarshipByIdAsync(int id, CancellationToken ct = default)
         {
-            using var scope = _logger.BeginScope(new Dictionary<string, object> { ["RequestId"] = Guid.NewGuid(), ["Id"] = id, ["CorrelationId"] = _correlationAccessor.CorrelationContext.CorrelationId });
+            using var scope = _logger.BeginScope(new Dictionary<string, object>
+            {
+                ["RequestId"] = Guid.NewGuid(),
+                ["Id"] = id,
+                ["CorrelationId"] = _correlationAccessor.CorrelationContext.CorrelationId
+            });
             _logger.LogInformation("Fetching enriched starship by id: {Id}", id);
 
             try
             {
                 var starship = await _client.GetStarshipByIdAsync(id, ct);
-                var enriched = new EnrichedStarship
+                var validationHandler = _validationPool.Get();
+                try
+                {
+                    await validationHandler.HandleAsync(new[] { starship }, ct);
+                }
+                finally
+                {
+                    _validationPool.Return(validationHandler);
+                }
+
+                var response = new StarshipResponse
                 {
                     Name = starship.Name,
                     Model = starship.Model,
@@ -83,27 +109,29 @@ namespace Application.Servicies
                     MGLT = starship.MGLT,
                     CargoCapacity = starship.CargoCapacity,
                     Consumables = starship.Consumables,
-                    Films = starship.Films,
-                    Pilots = starship.Pilots,
-                    Url = starship.Url
+                    Films = new List<Film>(),
+                    Pilots = new List<Person>()
                 };
 
-                // Resolve pilots and films
-                enriched.ResolvedPilots = new List<Person>();
-                foreach (var pilotUrl in starship.Pilots)
+                foreach (var pilotUrl in starship.Pilots ?? Enumerable.Empty<string>())
                 {
-                    var pilotId = int.Parse(pilotUrl.Split('/').LastOrDefault(s => !string.IsNullOrEmpty(s))!);
-                    enriched.ResolvedPilots = enriched.ResolvedPilots.Append(await _client.GetPersonByIdAsync(pilotId, ct));
+                    if (int.TryParse(pilotUrl.Split('/').LastOrDefault(s => !string.IsNullOrEmpty(s)), out var pilotId))
+                    {
+                        var person = await _client.GetPersonByIdAsync(pilotId, ct);
+                        response.Pilots.ToList().Add(person);
+                    }
                 }
 
-                enriched.ResolvedFilms = new List<Film>();
-                foreach (var filmUrl in starship.Films)
+                foreach (var filmUrl in starship.Films ?? Enumerable.Empty<string>())
                 {
-                    var filmId = int.Parse(filmUrl.Split('/').LastOrDefault(s => !string.IsNullOrEmpty(s))!);
-                    enriched.ResolvedFilms = enriched.ResolvedFilms.Append(await _client.GetFilmByIdAsync(filmId, ct));
+                    if (int.TryParse(filmUrl.Split('/').LastOrDefault(s => !string.IsNullOrEmpty(s)), out var filmId))
+                    {
+                        var film = await _client.GetFilmByIdAsync(filmId, ct);
+                        response.Films.ToList().Add(film);
+                    }
                 }
 
-                return enriched;
+                return response;
             }
             catch (Exception ex)
             {
