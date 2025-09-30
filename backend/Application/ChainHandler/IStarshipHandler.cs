@@ -5,11 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.Validators
+namespace Application.ChainHandler
 {
 
-    public interface IStarshipListValidationHandler
+    public interface IStarshipHandler
     {
         Task<IEnumerable<Starship>> HandleAsync(IEnumerable<Starship> starships, CancellationToken ct = default);
+        IStarshipHandler SetNext(IStarshipHandler next);
     }
 }

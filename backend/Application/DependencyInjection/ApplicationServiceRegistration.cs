@@ -1,4 +1,4 @@
-﻿using Application.Handlers;
+﻿using Application.ChainHandler;
 using Application.Interfaces;
 using Application.Servicies;
 using Application.Validators;
@@ -24,13 +24,18 @@ namespace StarWars.Application
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
             services.AddSingleton<ISwapiFacadeService, SwapiFacadeService>();
             services.AddSingleton<IValidator<Starship>, StarshipValidator>();
-            services.AddSingleton<IStarshipListValidationHandler, ValidationHandler>();
+            services.AddSingleton<IStarshipHandler, ValidationHandler>();
             services.AddSingleton<ObjectPoolProvider, DefaultObjectPoolProvider>();
             services.AddSingleton<ObjectPool<ValidationHandler>>(provider =>
             {
                 var poolProvider = provider.GetRequiredService<ObjectPoolProvider>();
                 return poolProvider.Create(new ValidationHandlerPolicy(provider));
             });
+
+
+
+
+
 
 
             return services;

@@ -1,74 +1,47 @@
 ﻿using Domain.Models;
 using FluentValidation;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Validators
 {
-
     public class StarshipValidator : AbstractValidator<Starship>
     {
+        private static readonly string[] AllowedUnknowns = { "unknown", "none", "n/a" };
+
         public StarshipValidator()
         {
-            RuleFor(s => s.Name)
-                .NotEmpty().WithMessage("Starship name cannot be empty.");
-            RuleFor(s => s.Model)
-                .NotEmpty().WithMessage("Starship model cannot be empty.");
-            RuleFor(s => s.Manufacturer)
-                .NotEmpty().WithMessage("Starship manufacturer cannot be empty.");
             RuleFor(s => s.Cost_In_Credits)
-                .Must(c => c == "unknown" || decimal.TryParse(c.Replace(",", ""), out _))
-                .WithMessage("Cost in credits must be a valid number or 'unknown'.");
+                .Must(BeValidNumberOrUnknown).WithMessage("Cost in credits must be a valid number or unknown keyword.");
 
-            RuleFor(s => s.Length)
-                 .Must(l => l == "unknown" || double.TryParse(l.Replace(",", ""), out _))
-                 .WithMessage("Length must be a valid number or 'unknown'.");
-            RuleFor(s => s.Crew)
-                .NotEmpty().WithMessage("Crew cannot be empty.");
-            RuleFor(s => s.Passengers)
-                .NotEmpty().WithMessage("Passengers cannot be empty.");
             RuleFor(s => s.Max_Atmosphering_Speed)
-                .Must(s =>
-                    string.IsNullOrEmpty(s) ||
-                    s == "n/a" ||
-                    s == "unknown" ||
-                    s == "none" ||
-                    int.TryParse(
-                        new string(s.Where(char.IsDigit).ToArray()), // keep only digits
-                        out _
-                    )
-                )
-                .WithMessage("Max atmosphering speed must be a valid number, 'n/a', 'unknown', or 'none'.");
-
+                .Must(BeValidNumberOrUnknown).WithMessage("Max atmosphering speed must be a valid number or unknown keyword.");
 
             RuleFor(s => s.Hyperdrive_Rating)
-                .Must(h =>
-                    string.IsNullOrEmpty(h) ||
-                    h == "unknown" ||
-                    double.TryParse(h, out _)
-                )
-                .WithMessage("Hyperdrive rating must be a valid number or 'unknown'.");
+                .Must(BeValidNumberOrUnknown).WithMessage("Hyperdrive rating must be a valid number or unknown keyword.");
 
             RuleFor(s => s.MGLT)
-                .Must(m =>
-                    string.IsNullOrEmpty(m) ||
-                    m == "unknown" ||
-                    int.TryParse(m, out _)
-                )
-                .WithMessage("MGLT must be a valid number or 'unknown'.");
+                .Must(BeValidNumberOrUnknown).WithMessage("MGLT must be a valid number or unknown keyword.");
 
             RuleFor(s => s.Cargo_Capacity)
-                .Must(c =>
-                    string.IsNullOrEmpty(c) ||
-                    c == "unknown" ||
-                    double.TryParse(c.Replace(",", ""), out _)
-                )
-                .WithMessage("Cargo capacity must be a valid number or 'unknown'.");
-            RuleFor(s => s.Consumables)
-                .NotEmpty().WithMessage("Consumables cannot be empty.");
+                .Must(BeValidNumberOrUnknown).WithMessage("Cargo capacity must be a valid number or unknown keyword.");
+        }
+
+        private bool BeValidNumberOrUnknown(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return true;
+
+            var normalized = value.Trim().ToLower();
+
+            // allow keywords
+            if (AllowedUnknowns.Contains(normalized))
+                return true;
+
+            // clean the value: remove commas and any non-digit characters except dot or minus
+            var cleaned = new string(value.Where(c => char.IsDigit(c) || c == '.' || c == '-').ToArray());
+
+            // try parse
+            return long.TryParse(cleaned, out _) || double.TryParse(cleaned, out _);
         }
     }
 }

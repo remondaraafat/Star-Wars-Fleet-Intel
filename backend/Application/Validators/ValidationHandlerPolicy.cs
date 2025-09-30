@@ -1,4 +1,4 @@
-﻿using Application.Handlers;
+﻿using Application.ChainHandler;
 using Domain.Models;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;

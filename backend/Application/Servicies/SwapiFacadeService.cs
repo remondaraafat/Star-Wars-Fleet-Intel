@@ -1,28 +1,28 @@
 ﻿using Application.Interfaces;
+using Application.ChainHandler;
+using Application.Validators;
 using Domain.Models;
 using Microsoft.Extensions.Logging;
+using CorrelationId.Abstractions;
+using FluentValidation;
+using Microsoft.Extensions.ObjectPool;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using CorrelationId.Abstractions;
-using Domain.Models;
-using FluentValidation;
-using global::Application.Handlers;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.ObjectPool;
+
 namespace Application.Servicies
 {
-
-
     public class SwapiFacadeService : ISwapiFacadeService
     {
         private readonly ISwapiClient _client;
         private readonly ILogger<SwapiFacadeService> _logger;
         private readonly IValidator<Starship> _validator;
-        private readonly ObjectPool<ValidationHandler> _validationPool;
+        
         private readonly ICorrelationContextAccessor _correlationAccessor;
+
+        private readonly ObjectPool<ValidationHandler> _validationPool;
 
         public SwapiFacadeService(
             ISwapiClient client,
@@ -31,12 +31,13 @@ namespace Application.Servicies
             ObjectPool<ValidationHandler> validationPool,
             ICorrelationContextAccessor correlationAccessor)
         {
-            _client = client ?? throw new ArgumentNullException(nameof(client));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _validator = validator ?? throw new ArgumentNullException(nameof(validator));
-            _validationPool = validationPool ?? throw new ArgumentNullException(nameof(validationPool));
-            _correlationAccessor = correlationAccessor ?? throw new ArgumentNullException(nameof(correlationAccessor));
+            _client = client;
+            _logger = logger;
+            _validator = validator;
+            _validationPool = validationPool;
+            _correlationAccessor = correlationAccessor;
         }
+
 
         public async Task<IEnumerable<Starship>> GetStarshipsAsync(string? search = null, CancellationToken ct = default)
         {
@@ -46,23 +47,30 @@ namespace Application.Servicies
                 ["Search"] = search ?? "none",
                 ["CorrelationId"] = _correlationAccessor.CorrelationContext.CorrelationId
             });
+
             _logger.LogInformation("Fetching starships with search: {Search}", search);
 
             string endpoint = "starships/";
-            if (!string.IsNullOrEmpty(search)) endpoint += $"?search={Uri.EscapeDataString(search)}";
+            if (!string.IsNullOrEmpty(search))
+                endpoint += $"?search={Uri.EscapeDataString(search)}";
 
             try
             {
                 var starships = await _client.GetStarshipsAsync(endpoint, ct);
-                var validationHandler = _validationPool.Get();
+
+                // Build CoR: Sanitization -> Validation
+                var sanitizer = new SanitizationHandler();
+                var validatorHandler = _validationPool.Get();
+                sanitizer.SetNext(validatorHandler);
+
                 try
                 {
-                    var validated = await validationHandler.HandleAsync(starships, ct);
-                    return validated;
+                    var processed = await sanitizer.HandleAsync(starships, ct);
+                    return processed;
                 }
                 finally
                 {
-                    _validationPool.Return(validationHandler);
+                    _validationPool.Return(validatorHandler);
                 }
             }
             catch (Exception ex)
@@ -80,19 +88,25 @@ namespace Application.Servicies
                 ["Id"] = id,
                 ["CorrelationId"] = _correlationAccessor.CorrelationContext.CorrelationId
             });
+
             _logger.LogInformation("Fetching enriched starship by id: {Id}", id);
 
             try
             {
                 var starship = await _client.GetStarshipByIdAsync(id, ct);
-                var validationHandler = _validationPool.Get();
+
+                // Build CoR: Sanitization -> Validation
+                var sanitizer = new SanitizationHandler();
+                var validatorHandler = _validationPool.Get();
+                sanitizer.SetNext(validatorHandler);
+
                 try
                 {
-                    await validationHandler.HandleAsync(new[] { starship }, ct);
+                    await sanitizer.HandleAsync(new[] { starship }, ct);
                 }
                 finally
                 {
-                    _validationPool.Return(validationHandler);
+                    _validationPool.Return(validatorHandler);
                 }
 
                 var response = new StarshipResponse

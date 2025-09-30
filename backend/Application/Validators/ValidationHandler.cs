@@ -1,37 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Application.Validators;
-using Domain.Models;
+﻿using Domain.Models;
 using FluentValidation;
-using FluentValidation.Results;
-namespace Application.Handlers
-{
+using System.Linq;
+using System.Globalization;
+using Application.ChainHandler;
 
-    public class ValidationHandler : IStarshipListValidationHandler
+namespace Application.Validators
+{
+    public class ValidationHandler : StarshipHandlerBase
     {
         private readonly IValidator<Starship> _validator;
 
         public ValidationHandler(IValidator<Starship> validator)
         {
-            _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+            _validator = validator;
         }
 
-        public async Task<IEnumerable<Starship>> HandleAsync(IEnumerable<Starship> starships, CancellationToken ct = default)
+        public override async Task<IEnumerable<Starship>> HandleAsync(IEnumerable<Starship> starships, CancellationToken ct)
         {
-            var validatedStarships = new List<Starship>();
-            foreach (var starship in starships)
+            foreach (var ship in starships)
             {
-                ValidationResult result = await _validator.ValidateAsync(starship, ct);
+                var result = await _validator.ValidateAsync(ship, ct);
                 if (!result.IsValid)
-                {
-                    throw new ValidationException($"Validation failed for starship {starship.Name}: {string.Join(", ", result.Errors.Select(e => e.ErrorMessage))}");
-                }
-                validatedStarships.Add(starship);
+                    throw new ValidationException($"Validation failed for {ship.Name}: {string.Join(", ", result.Errors.Select(e => e.ErrorMessage))}");
             }
-            return validatedStarships;
+
+            return await base.HandleAsync(starships, ct);
         }
     }
+
+
 }
