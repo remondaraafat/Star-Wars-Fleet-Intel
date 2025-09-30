@@ -1,4 +1,5 @@
-﻿using CorrelationId.DependencyInjection;
+﻿using Application.Interfaces;
+using CorrelationId.DependencyInjection;
 using Infrastructure.Client;
 using Infrastructure.SwapiProvider;
 using Microsoft.Extensions.Configuration;
@@ -23,7 +24,7 @@ namespace Infrastructure.DependencyInjection
                 .Validate(s => s.TimeoutSeconds > 0, "TimeoutSeconds must be > 0");
 
             // Register HttpClient using the options
-            services.AddHttpClient<SwapiClient>((sp, client) =>
+            services.AddHttpClient<ISwapiClient,SwapiClient>((sp, client) =>
             {
                 // Get the bound settings
                 var settings = sp.GetRequiredService<IOptions<SwapiClientSettings>>().Value;

@@ -1,20 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Application.Interfaces;
 using CorrelationId.Abstractions;
 using Domain.Models;
 using global::Infrastructure.SwapiProvider;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Infrastructure.Client
 {
 
 
-    public class SwapiClient
+    public class SwapiClient : ISwapiClient
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<SwapiClient> _logger;
