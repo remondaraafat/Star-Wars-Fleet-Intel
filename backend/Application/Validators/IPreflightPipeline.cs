@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.Interfaces
+namespace Application.Validators
 {
-    internal class IStarshipEnricher
+    internal interface IPreflightPipeline
     {
+        bool BeValidNumberOrUnknown(string? value);
     }
 }

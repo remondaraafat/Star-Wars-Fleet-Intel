@@ -41,6 +41,10 @@ namespace StarWars.Application
                 var defaultStrategy = sp.GetRequiredService<UsdConversionStrategy>();
                 return new CurrencyConverter(defaultStrategy);
             });
+            //decorator 
+            services.AddTransient<Domain.Decorators.IStarshipDecorator, Domain.Decorators.ShieldBoostDecorator>();
+            services.AddTransient<Domain.Decorators.IStarshipDecorator, Domain.Decorators.TargetingComputerDecorator>();
+
 
 
 

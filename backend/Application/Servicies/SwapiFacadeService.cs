@@ -25,13 +25,15 @@ namespace Application.Services
         private readonly ObjectPool<ValidationHandler> _validationPool;
         private readonly CurrencyConverter _converter;
 
+        private readonly IEnumerable<Domain.Decorators.IStarshipDecorator> _decorators;
         public SwapiFacadeService(
             ISwapiClient client,
             ILogger<SwapiFacadeService> logger,
             IValidator<Starship> validator,
             ObjectPool<ValidationHandler> validationPool,
             ICorrelationContextAccessor correlationAccessor,
-            CurrencyConverter converter)
+            CurrencyConverter converter,
+            IEnumerable<Domain.Decorators.IStarshipDecorator> decorators) 
         {
             _client = client;
             _logger = logger;
@@ -39,7 +41,9 @@ namespace Application.Services
             _validationPool = validationPool;
             _correlationAccessor = correlationAccessor;
             _converter = converter;
+            _decorators = decorators ?? Enumerable.Empty<Domain.Decorators.IStarshipDecorator>();
         }
+
 
         public async Task<IEnumerable<GetStarshipsDto>> GetStarshipsAsync(string? search = null, CancellationToken ct = default)
         {
@@ -159,67 +163,90 @@ namespace Application.Services
                 });
                 var films = await Task.WhenAll(filmTasks);
 
+                // Convert cost if numeric
                 decimal? convertedCost = null;
                 if (decimal.TryParse(starship.Cost_In_Credits, out var credits))
                 {
                     convertedCost = _converter.Convert(credits);
                 }
 
-
-
-                // Map to DTO
-                var responseDto = new EnrichedStarshipResponseDto
+                // create enriched domain model
+                var enriched = new EnrichedStarship
                 {
                     Name = starship.Name,
                     Model = starship.Model,
                     Manufacturer = starship.Manufacturer,
-                    CostInCredits = starship.Cost_In_Credits,
-                    ConvertedCost = convertedCost ?? 0,
+                    Cost_In_Credits = starship.Cost_In_Credits,
+                    ConvertedCost = convertedCost,
                     CurrencySymbol = _converter.CurrencySymbol,
                     Length = starship.Length,
                     Crew = starship.Crew,
                     Passengers = starship.Passengers,
-                    MaxAtmospheringSpeed = starship.Max_Atmosphering_Speed,
-                    HyperdriveRating = starship.Hyperdrive_Rating,
+                    Max_Atmosphering_Speed = starship.Max_Atmosphering_Speed,
+                    Hyperdrive_Rating = starship.Hyperdrive_Rating,
                     MGLT = starship.MGLT,
-                    CargoCapacity = starship.Cargo_Capacity,
+                    Cargo_Capacity = starship.Cargo_Capacity,
                     Consumables = starship.Consumables,
                     Url = starship.Url,
-                    Pilots = pilots.Where(p => p != null)
-    .Select(p => new PersonDto
-    {
-        Name = p!.Name,
-        BirthYear = p.BirthYear,
-        Gender = p.Gender,
-        Height = p.Height,
-        Mass = p.Mass,
-        HairColor = p.HairColor,
-        EyeColor = p.EyeColor,
-        SkinColor = p.SkinColor,
-        Homeworld = p.Homeworld,
-        Created = p.Created,
-        Edited = p.Edited,
-        Url = p.Url
-    })
-    .ToList(),
-
-                    Films = films.Where(f => f != null)
-    .Select(f => new FilmDto
-    {
-        Title = f!.Title,
-        EpisodeId = f.EpisodeId,
-        OpeningCrawl = f.OpeningCrawl,
-        Director = f.Director,
-        Producer = f.Producer,
-        ReleaseDate = f.ReleaseDate,
-        Created = f.Created,
-        Edited = f.Edited,
-        Url = f.Url
-    })
-    .ToList()
-
-
+                    ResolvedPilots = pilots.Where(p => p != null).Select(p => p!).ToList(),
+                    ResolvedFilms = films.Where(f => f != null).Select(f => f!).ToList()
                 };
+
+                // Apply decorators in registration order
+                foreach (var decorator in _decorators)
+                {
+                    enriched = decorator.Apply(enriched);
+                }
+
+                // Map enriched -> DTO
+                var responseDto = new EnrichedStarshipResponseDto
+                {
+                    Name = enriched.Name,
+                    Model = enriched.Model,
+                    Manufacturer = enriched.Manufacturer,
+                    CostInCredits = enriched.Cost_In_Credits,
+                    ConvertedCost = enriched.ConvertedCost ?? 0,
+                    CurrencySymbol = enriched.CurrencySymbol,
+                    Length = enriched.Length,
+                    Crew = enriched.Crew,
+                    Passengers = enriched.Passengers,
+                    MaxAtmospheringSpeed = enriched.Max_Atmosphering_Speed,
+                    HyperdriveRating = enriched.Hyperdrive_Rating,
+                    MGLT = enriched.MGLT,
+                    CargoCapacity = enriched.Cargo_Capacity,
+                    Consumables = enriched.Consumables,
+                    Url = enriched.Url,
+                    ShieldBoost = enriched.ShieldBoost,
+                    TargetingAccuracy = enriched.TargetingAccuracy,
+                    Pilots = enriched.ResolvedPilots.Select(p => new PersonDto
+                    {
+                        Name = p.Name,
+                        BirthYear = p.BirthYear,
+                        Gender = p.Gender,
+                        Height = p.Height,
+                        Mass = p.Mass,
+                        HairColor = p.HairColor,
+                        EyeColor = p.EyeColor,
+                        SkinColor = p.SkinColor,
+                        Homeworld = p.Homeworld,
+                        Created = p.Created,
+                        Edited = p.Edited,
+                        Url = p.Url
+                    }).ToList(),
+                    Films = enriched.ResolvedFilms.Select(f => new FilmDto
+                    {
+                        Title = f.Title,
+                        EpisodeId = f.EpisodeId,
+                        OpeningCrawl = f.OpeningCrawl,
+                        Director = f.Director,
+                        Producer = f.Producer,
+                        ReleaseDate = f.ReleaseDate,
+                        Created = f.Created,
+                        Edited = f.Edited,
+                        Url = f.Url
+                    }).ToList()
+                };
+
 
                 return responseDto;
             }

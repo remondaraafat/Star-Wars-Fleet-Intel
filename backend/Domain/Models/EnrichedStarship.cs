@@ -9,10 +9,16 @@ namespace Domain.Models
 {
     public class EnrichedStarship : Starship
     {
-        public decimal? ConvertedCost { get; set; }  // From Strategy
-        public int ShieldBoost { get; set; }        // From Decorator
-        public int TargetingAccuracy { get; set; }  // From Decorator
-        public IEnumerable<Film> ResolvedFilms { get; set; }
-        public IEnumerable<Person> ResolvedPilots { get; set; }
+        // Strategy output
+        public decimal? ConvertedCost { get; set; } = null;
+        public string? CurrencySymbol { get; set; } = null;
+
+        // Decorator fields (defaults: 0)
+        public int ShieldBoost { get; set; } = 0;
+        public int TargetingAccuracy { get; set; } = 0;
+
+        // Resolved references
+        public IEnumerable<Film> ResolvedFilms { get; set; } = new List<Film>();
+        public IEnumerable<Person> ResolvedPilots { get; set; } = new List<Person>();
     }
 }

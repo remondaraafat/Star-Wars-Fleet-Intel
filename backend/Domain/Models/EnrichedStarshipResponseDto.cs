@@ -23,7 +23,11 @@ namespace Domain.Models
         public string Consumables { get; set; }
         public List<FilmDto> Films { get; set; }
         public List<PersonDto> Pilots { get; set; }
+        //currency conversion outputs
         public string CurrencySymbol { get; set; }
         public decimal ConvertedCost { get; set; }
+        // Decorator outputs
+        public int ShieldBoost { get; set; } = 0;
+        public int TargetingAccuracy { get; set; } = 0;
     }
 }

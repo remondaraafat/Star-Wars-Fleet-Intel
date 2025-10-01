@@ -5,11 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.Decorators
+namespace Domain.Decorators
 {
-
-    public interface IStarshipEnricher
+    public interface IStarshipDecorator
     {
-        EnrichedStarship Enrich(EnrichedStarship starship);
+        EnrichedStarship Apply(EnrichedStarship starship);
     }
 }

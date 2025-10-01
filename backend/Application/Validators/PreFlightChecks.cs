@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Application.Validators
 {
-    public class PreFlightChecks : AbstractValidator<Starship>
+    public class PreFlightChecks : AbstractValidator<Starship>, IPreflightPipeline
     {
         private static readonly string[] AllowedUnknowns = { "unknown", "none", "n/a" };
 
@@ -26,7 +26,7 @@ namespace Application.Validators
                 .Must(BeValidNumberOrUnknown).WithMessage("Cargo capacity must be a valid number or unknown keyword.");
         }
 
-        private bool BeValidNumberOrUnknown(string? value)
+        public bool BeValidNumberOrUnknown(string? value)
         {
             if (string.IsNullOrWhiteSpace(value))
                 return true;
