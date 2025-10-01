@@ -72,9 +72,14 @@ namespace API
 
             if (app.Environment.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage();
+                //app.UseDeveloperExceptionPage();
+                app.UseMiddleware<API.Middleware.ExceptionHandlingMiddleware>();
             }
-            
+            else
+            {
+                //app.UseMiddleware<API.Middleware.ExceptionHandlingMiddleware>();
+            }
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseCors("AllowAngularApp");

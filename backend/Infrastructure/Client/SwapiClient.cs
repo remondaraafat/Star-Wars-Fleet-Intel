@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces;
 using CorrelationId.Abstractions;
+using Domain.Exceptions;
 using Domain.Models;
 using global::Infrastructure.SwapiProvider;
 using Microsoft.Extensions.Configuration;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -59,8 +61,18 @@ namespace Infrastructure.Client
                 _httpClient.DefaultRequestHeaders.Remove("X-Correlation-Id");
                 _httpClient.DefaultRequestHeaders.Add("X-Correlation-Id", _correlationAccessor.CorrelationContext.CorrelationId);
 
+                
                 var response = await _httpClient.GetAsync(endpoint, ct);
-                response.EnsureSuccessStatusCode();
+                if (!response.IsSuccessStatusCode)
+                {
+                    if (response.StatusCode == HttpStatusCode.NotFound)
+                    {
+                        throw new NotFoundException($"SWAPI endpoint not found: {endpoint}");
+                    }
+                    // for other non-success
+                    var body = await response.Content.ReadAsStringAsync(ct);
+                    throw new HttpRequestException($"External API returned {(int)response.StatusCode} {response.ReasonPhrase}: {body}");
+                }
                 var content = await response.Content.ReadAsStringAsync(ct);
 
                 var result = JsonSerializer.Deserialize<SwapiListResponse<Starship>>(content,
@@ -74,7 +86,6 @@ namespace Infrastructure.Client
                 throw;
             }
         }
-
 
         public async Task<Starship> GetStarshipByIdAsync(int id, CancellationToken ct = default)
         {
@@ -99,14 +110,25 @@ namespace Infrastructure.Client
                 _httpClient.DefaultRequestHeaders.Add("X-Correlation-Id", _correlationAccessor.CorrelationContext.CorrelationId);
 
                 var response = await _httpClient.GetAsync(endpoint, ct);
-                response.EnsureSuccessStatusCode();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    if (response.StatusCode == HttpStatusCode.NotFound)
+                    {
+                        throw new NotFoundException($"Starship with id {id} not found.");
+                    }
+                    var body = await response.Content.ReadAsStringAsync(ct);
+                    throw new HttpRequestException($"External API returned {(int)response.StatusCode} {response.ReasonPhrase}: {body}");
+                }
+
                 var content = await response.Content.ReadAsStringAsync(ct);
-
                 var result = JsonSerializer.Deserialize<Starship>(content,
-    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
+                if (result == null)
+                    throw new NotFoundException($"Starship with id {id} not found.");
 
-                return result ?? throw new InvalidOperationException("Starship not found");
+                return result;
             }
             catch (HttpRequestException ex)
             {

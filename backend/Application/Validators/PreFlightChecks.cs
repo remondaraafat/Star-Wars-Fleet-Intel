@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Application.Validators
 {
-    public class PreFlightChecks : AbstractValidator<Starship>, IPreflightPipeline
+    public class PreFlightChecks : AbstractValidator<Starship>
     {
         private static readonly string[] AllowedUnknowns = { "unknown", "none", "n/a" };
 
