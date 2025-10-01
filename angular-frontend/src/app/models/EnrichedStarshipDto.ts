@@ -7,4 +7,5 @@ export interface EnrichedStarshipDto extends GetStarshipsDto {
   pilots: PersonDto[];
   shieldBoost: number;
   targetingAccuracy: number;
+  weaponPower: number;
 }

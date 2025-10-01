@@ -15,4 +15,7 @@ export interface GetStarshipsDto {
   currencySymbol: string;
   convertedCost: number;
   url: string;
+  starshipClass: string;
+
+   
 }

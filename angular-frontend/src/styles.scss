@@ -9,14 +9,14 @@
 @import './styles/base/base';
 
 // 3. Components
-@import './styles/components/modal';
+@import './styles/components/input';
 @import './styles/components/card';
 @import './styles/components/buttons';
 
 // 4. Layout
-@import './styles/layout/header';
-@import './styles/layout/footer';
-@import './styles/layout/grid';
+@import './styles/layout/container';
+@import './styles/layout/list';
+@import './styles/layout/modal';
 
 // 5. Pages
 @import './styles/pages/home';
