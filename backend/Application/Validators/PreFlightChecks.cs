@@ -4,11 +4,11 @@ using System.Linq;
 
 namespace Application.Validators
 {
-    public class StarshipValidator : AbstractValidator<Starship>
+    public class PreFlightChecks : AbstractValidator<Starship>
     {
         private static readonly string[] AllowedUnknowns = { "unknown", "none", "n/a" };
 
-        public StarshipValidator()
+        public PreFlightChecks()
         {
             RuleFor(s => s.Cost_In_Credits)
                 .Must(BeValidNumberOrUnknown).WithMessage("Cost in credits must be a valid number or unknown keyword.");

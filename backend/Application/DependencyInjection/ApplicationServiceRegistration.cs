@@ -24,7 +24,7 @@ namespace StarWars.Application
 
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
             services.AddSingleton<ISwapiFacadeService, SwapiFacadeService>();
-            services.AddSingleton<IValidator<Starship>, StarshipValidator>();
+            services.AddSingleton<IValidator<Starship>, PreFlightChecks>();
             services.AddSingleton<IStarshipHandler, ValidationHandler>();
             services.AddSingleton<ObjectPoolProvider, DefaultObjectPoolProvider>();
             services.AddSingleton<ObjectPool<ValidationHandler>>(provider =>
