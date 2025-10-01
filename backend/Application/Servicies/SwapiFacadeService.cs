@@ -141,30 +141,31 @@ namespace Application.Services
                     _validationPool.Return(validatorHandler);
                 }
 
-                // Fetch pilots in parallel
-                var pilotTasks = (starship.Pilots ?? Enumerable.Empty<string>())
-                    .Select(url =>
-                    {
-                        if (int.TryParse(url.Split('/').LastOrDefault(s => !string.IsNullOrEmpty(s)), out var pilotId))
-                            return _client.GetPersonByIdAsync(pilotId, ct);
-                        return Task.FromResult<Person?>(null);
-                    });
-
+                // Fetch pilots
+                var pilotTasks = starship.Pilots.Select(url =>
+                {
+                    if (int.TryParse(url.Split('/').LastOrDefault(s => !string.IsNullOrEmpty(s)), out var pilotId))
+                        return _client.GetPersonByIdAsync(pilotId, ct);
+                    return Task.FromResult<Person?>(null);
+                });
                 var pilots = await Task.WhenAll(pilotTasks);
 
-                // Fetch films in parallel
-                var filmTasks = (starship.Films ?? Enumerable.Empty<string>())
-                    .Select(url =>
-                    {
-                        if (int.TryParse(url.Split('/').LastOrDefault(s => !string.IsNullOrEmpty(s)), out var filmId))
-                            return _client.GetFilmByIdAsync(filmId, ct);
-                        return Task.FromResult<Film?>(null);
-                    });
-
+                // Fetch films
+                var filmTasks = starship.Films.Select(url =>
+                {
+                    if (int.TryParse(url.Split('/').LastOrDefault(s => !string.IsNullOrEmpty(s)), out var filmId))
+                        return _client.GetFilmByIdAsync(filmId, ct);
+                    return Task.FromResult<Film?>(null);
+                });
                 var films = await Task.WhenAll(filmTasks);
 
-                
-                
+                decimal? convertedCost = null;
+                if (decimal.TryParse(starship.Cost_In_Credits, out var credits))
+                {
+                    convertedCost = _converter.Convert(credits);
+                }
+
+
 
                 // Map to DTO
                 var responseDto = new EnrichedStarshipResponseDto
@@ -173,7 +174,8 @@ namespace Application.Services
                     Model = starship.Model,
                     Manufacturer = starship.Manufacturer,
                     CostInCredits = starship.Cost_In_Credits,
-                    
+                    ConvertedCost = convertedCost ?? 0,
+                    CurrencySymbol = _converter.CurrencySymbol,
                     Length = starship.Length,
                     Crew = starship.Crew,
                     Passengers = starship.Passengers,
@@ -182,12 +184,41 @@ namespace Application.Services
                     MGLT = starship.MGLT,
                     CargoCapacity = starship.Cargo_Capacity,
                     Consumables = starship.Consumables,
+                    Url = starship.Url,
                     Pilots = pilots.Where(p => p != null)
-                                   .Select(p => new PersonDto { Name = p!.Name })
-                                   .ToList(),
+    .Select(p => new PersonDto
+    {
+        Name = p!.Name,
+        BirthYear = p.BirthYear,
+        Gender = p.Gender,
+        Height = p.Height,
+        Mass = p.Mass,
+        HairColor = p.HairColor,
+        EyeColor = p.EyeColor,
+        SkinColor = p.SkinColor,
+        Homeworld = p.Homeworld,
+        Created = p.Created,
+        Edited = p.Edited,
+        Url = p.Url
+    })
+    .ToList(),
+
                     Films = films.Where(f => f != null)
-                                 .Select(f => new FilmDto { Title = f!.Title })
-                                 .ToList()
+    .Select(f => new FilmDto
+    {
+        Title = f!.Title,
+        EpisodeId = f.EpisodeId,
+        OpeningCrawl = f.OpeningCrawl,
+        Director = f.Director,
+        Producer = f.Producer,
+        ReleaseDate = f.ReleaseDate,
+        Created = f.Created,
+        Edited = f.Edited,
+        Url = f.Url
+    })
+    .ToList()
+
+
                 };
 
                 return responseDto;

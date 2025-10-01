@@ -97,10 +97,15 @@ namespace Infrastructure.Client
             {
                 _httpClient.DefaultRequestHeaders.Remove("X-Correlation-Id");
                 _httpClient.DefaultRequestHeaders.Add("X-Correlation-Id", _correlationAccessor.CorrelationContext.CorrelationId);
+
                 var response = await _httpClient.GetAsync(endpoint, ct);
                 response.EnsureSuccessStatusCode();
                 var content = await response.Content.ReadAsStringAsync(ct);
-                var result = JsonSerializer.Deserialize<Starship>(content, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+                var result = JsonSerializer.Deserialize<Starship>(content,
+    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+
                 return result ?? throw new InvalidOperationException("Starship not found");
             }
             catch (HttpRequestException ex)
@@ -109,6 +114,7 @@ namespace Infrastructure.Client
                 throw;
             }
         }
+
 
         public async Task<Person> GetPersonByIdAsync(int id, CancellationToken ct = default)
         {
@@ -134,7 +140,9 @@ namespace Infrastructure.Client
                 var response = await _httpClient.GetAsync(endpoint, ct);
                 response.EnsureSuccessStatusCode();
                 var content = await response.Content.ReadAsStringAsync(ct);
-                var result = JsonSerializer.Deserialize<Person>(content, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                var result = JsonSerializer.Deserialize<Person>(content,
+    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
                 return result ?? throw new InvalidOperationException("Person not found");
             }
             catch (HttpRequestException ex)
@@ -165,10 +173,16 @@ namespace Infrastructure.Client
             {
                 _httpClient.DefaultRequestHeaders.Remove("X-Correlation-Id");
                 _httpClient.DefaultRequestHeaders.Add("X-Correlation-Id", _correlationAccessor.CorrelationContext.CorrelationId);
+
                 var response = await _httpClient.GetAsync(endpoint, ct);
                 response.EnsureSuccessStatusCode();
                 var content = await response.Content.ReadAsStringAsync(ct);
-                var result = JsonSerializer.Deserialize<Film>(content, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+                //ase-insensitive matching
+                var result = JsonSerializer.Deserialize<Film>(content,
+    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+
                 return result ?? throw new InvalidOperationException("Film not found");
             }
             catch (HttpRequestException ex)
@@ -177,5 +191,6 @@ namespace Infrastructure.Client
                 throw;
             }
         }
+
     }
 }
