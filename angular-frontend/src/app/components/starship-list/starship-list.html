@@ -21,7 +21,6 @@
       <p>MGLT: {{ starship.mglt }}</p>
       <p>Cargo Capacity: {{ starship.cargoCapacity }}</p>
       <p>Consumables: {{ starship.consumables }}</p>
-      
     </div>
   }
 </div>
@@ -29,6 +28,7 @@
 @if (starships.length === 0) {
   <p class="starship-list__empty">No starships found.</p>
 }
+
 <app-starship-detail
   [starship]="selectedStarship"
   [isOpen]="isModalOpen">

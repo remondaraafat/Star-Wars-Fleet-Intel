@@ -1,4 +1,4 @@
-import { Component, Input, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy, signal, WritableSignal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EnrichedStarshipDto } from '../../models/EnrichedStarshipDto';
 
@@ -11,10 +11,12 @@ import { EnrichedStarshipDto } from '../../models/EnrichedStarshipDto';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StarshipDetailComponent {
-  @Input() starship = signal<EnrichedStarshipDto | null>(null);
-  @Input() isOpen = signal<boolean>(false);
+  
+  @Input() starship!: WritableSignal<EnrichedStarshipDto | null>;
+  @Input() isOpen!: WritableSignal<boolean>;
 
-  closeModal() {
-    this.isOpen.set(false);
-  }
+close() {
+  this.isOpen.set(false);
+}
+
 }

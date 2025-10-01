@@ -1,8 +1,8 @@
 @if (isOpen()){
-  <div class="modal-backdrop" (click)="closeModal()"></div>
+  <div class="modal-backdrop" (click)="close()"></div>
 
   <div class="modal">
-    <button class="modal__close" (click)="closeModal()">✖</button>
+    <button class="modal__close" (click)="close()">✖</button>
     <h2>{{ starship()?.name }}</h2>
     <p>Model: {{ starship()?.model }}</p>
     <p>Manufacturer: {{ starship()?.manufacturer }}</p>
@@ -15,18 +15,29 @@
     <p>Targeting Accuracy: {{ starship()?.targetingAccuracy }}</p>
 
     <h3>Films</h3>
-    <ul>
-      @for (film of starship()?.films; track film.id) {
-        <li>{{ film.title }} (Episode {{ film.episode_id }})</li>
+    <div class="cards-container">
+      @for(film of starship()?.films; track film.id) {
+        <div class="film-card">
+          <h4>{{ film.title }}</h4>
+          <p>Episode: {{ film.episode_id }}</p>
+          <p>Director: {{ film.director }}</p>
+          <p>Producer: {{ film.producer }}</p>
+          <p>Release Date: {{ film.release_date }}</p>
+        </div>
       }
-    </ul>
+    </div>
 
     <h3>Pilots</h3>
-    <ul>
-      @for (pilot of starship()?.pilots; track pilot.id) {
-        <li>{{ pilot.name }} - {{ pilot.gender }}</li>
+    <div class="cards-container">
+      @for(pilot of starship()?.pilots; track pilot.id) {
+        <div class="pilot-card">
+          <h4>{{ pilot.name }}</h4>
+          <p>Gender: {{ pilot.gender }}</p>
+          <p>Height: {{ pilot.height }} | Mass: {{ pilot.mass }}</p>
+          <p>Hair: {{ pilot.hair_color }} | Eyes: {{ pilot.eye_color }}</p>
+          <p>Birth Year: {{ pilot.birth_year }}</p>
+        </div>
       }
-    </ul>
+    </div>
   </div>
-<p>starship-detail works!</p>
 }

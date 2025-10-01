@@ -1,0 +1,22 @@
+/* Cards */
+.starship-list__card, .film-card, .pilot-card {
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: $shadow-medium;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  background-color: $color-lighter;
+  color: $color-main;
+
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: $shadow-hover;
+  }
+
+  h2, h4 {
+    text-transform: uppercase;
+  }
+}
+

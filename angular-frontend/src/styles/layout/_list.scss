@@ -1,0 +1,21 @@
+/* Starship List */
+.starship-list {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem;
+
+  &__cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.8rem;
+    padding: 0 1rem;
+  }
+
+  &__empty {
+    text-align: center;
+    color: $color-main;
+    font-style: italic;
+    margin-top: 2rem;
+    font-size: 1.1rem;
+  }
+}

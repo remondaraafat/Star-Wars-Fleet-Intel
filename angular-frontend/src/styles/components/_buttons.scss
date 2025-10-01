@@ -1,0 +1,14 @@
+/* Buttons */
+.pilot-button {
+  background-color: $color-main;
+  color: $color-light;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #2a3a5f;
+  }
+}
