@@ -1,6 +1,7 @@
 ﻿using Application.ChainHandler;
 using Application.Interfaces;
 using Application.Servicies;
+using Application.Strategies;
 using Application.Validators;
 using CorrelationId.Abstractions;
 using Domain.Models;
@@ -22,22 +23,25 @@ namespace Application.Services
         private readonly IValidator<Starship> _validator;
         private readonly ICorrelationContextAccessor _correlationAccessor;
         private readonly ObjectPool<ValidationHandler> _validationPool;
+        private readonly CurrencyConverter _converter;
 
         public SwapiFacadeService(
             ISwapiClient client,
             ILogger<SwapiFacadeService> logger,
             IValidator<Starship> validator,
             ObjectPool<ValidationHandler> validationPool,
-            ICorrelationContextAccessor correlationAccessor)
+            ICorrelationContextAccessor correlationAccessor,
+            CurrencyConverter converter)
         {
             _client = client;
             _logger = logger;
             _validator = validator;
             _validationPool = validationPool;
             _correlationAccessor = correlationAccessor;
+            _converter = converter;
         }
 
-        public async Task<IEnumerable<StarshipResponseDto>> GetStarshipsAsync(string? search = null, CancellationToken ct = default)
+        public async Task<IEnumerable<GetStarshipsDto>> GetStarshipsAsync(string? search = null, CancellationToken ct = default)
         {
             using var scope = _logger.BeginScope(new Dictionary<string, object>
             {
@@ -72,22 +76,32 @@ namespace Application.Services
                 }
 
                 // Map domain objects to DTOs
-                var starshipDtos = processed.Select(s => new StarshipResponseDto
+                var starshipDtos = processed.Select(s =>
                 {
-                    Name = s.Name,
-                    Model = s.Model,
-                    Manufacturer = s.Manufacturer,
-                    CostInCredits = s.Cost_In_Credits,
-                    Length = s.Length,
-                    Crew = s.Crew,
-                    Passengers = s.Passengers,
-                    MaxAtmospheringSpeed = s.Max_Atmosphering_Speed,
-                    HyperdriveRating = s.Hyperdrive_Rating,
-                    MGLT = s.MGLT,
-                    CargoCapacity = s.Cargo_Capacity,
-                    Consumables = s.Consumables,
-                    Pilots = new List<PersonDto>(), // Leave empty for list endpoint
-                    Films = new List<FilmDto>()
+                    decimal? convertedCost = null;
+                    if (decimal.TryParse(s.Cost_In_Credits, out var credits))
+                    {
+                        convertedCost = _converter.Convert(credits);
+                    }
+
+                    return new GetStarshipsDto
+                    {
+                        Name = s.Name,
+                        Model = s.Model,
+                        Manufacturer = s.Manufacturer,
+                        CostInCredits = s.Cost_In_Credits,
+                        ConvertedCost = convertedCost ?? 0,
+                        CurrencySymbol = _converter.CurrencySymbol,
+                        Length = s.Length,
+                        Crew = s.Crew,
+                        Passengers = s.Passengers,
+                        MaxAtmospheringSpeed = s.Max_Atmosphering_Speed,
+                        HyperdriveRating = s.Hyperdrive_Rating,
+                        MGLT = s.MGLT,
+                        CargoCapacity = s.Cargo_Capacity,
+                        Consumables = s.Consumables,
+                        Url = s.Url
+                    };
                 }).ToList();
 
                 return starshipDtos;
@@ -99,7 +113,7 @@ namespace Application.Services
             }
         }
 
-        public async Task<StarshipResponseDto> GetEnrichedStarshipByIdAsync(int id, CancellationToken ct = default)
+        public async Task<EnrichedStarshipResponseDto> GetEnrichedStarshipByIdAsync(int id, CancellationToken ct = default)
         {
             using var scope = _logger.BeginScope(new Dictionary<string, object>
             {
@@ -113,7 +127,6 @@ namespace Application.Services
             try
             {
                 var starship = await _client.GetStarshipByIdAsync(id, ct);
-
                 // Chain of Responsibility: Sanitization -> Validation
                 var sanitizer = new SanitizationHandler();
                 var validatorHandler = _validationPool.Get();
@@ -150,13 +163,17 @@ namespace Application.Services
 
                 var films = await Task.WhenAll(filmTasks);
 
+                
+                
+
                 // Map to DTO
-                var responseDto = new StarshipResponseDto
+                var responseDto = new EnrichedStarshipResponseDto
                 {
                     Name = starship.Name,
                     Model = starship.Model,
                     Manufacturer = starship.Manufacturer,
                     CostInCredits = starship.Cost_In_Credits,
+                    
                     Length = starship.Length,
                     Crew = starship.Crew,
                     Passengers = starship.Passengers,

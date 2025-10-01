@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Models
 {
-    public class StarshipResponseDto : BaseEntity
+    public class EnrichedStarshipResponseDto : BaseEntity
     {
         public string Name { get; set; }
         public string Model { get; set; }
@@ -23,5 +23,7 @@ namespace Domain.Models
         public string Consumables { get; set; }
         public List<FilmDto> Films { get; set; }
         public List<PersonDto> Pilots { get; set; }
+        public string CurrencySymbol { get; set; }
+        public decimal ConvertedCost { get; set; }
     }
 }

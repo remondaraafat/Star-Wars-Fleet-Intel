@@ -17,17 +17,17 @@ namespace API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Starship>>> GetStarships([FromQuery] string? search = null, CancellationToken ct = default)
+        public async Task<ActionResult<IEnumerable<GetStarshipsDto>>> GetStarships([FromQuery] string? search = null, CancellationToken ct = default)
         {
 
-                var starships = await _swapiFacade.GetStarshipsAsync(search, ct);
+            IEnumerable<GetStarshipsDto> starships = await _swapiFacade.GetStarshipsAsync(search, ct);
                 return Ok(starships);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<StarshipResponseDto>> GetStarshipById(int id, CancellationToken ct = default)
+        public async Task<ActionResult<EnrichedStarshipResponseDto>> GetStarshipById(int id, CancellationToken ct = default)
         {
-            StarshipResponseDto starshipResponse = await _swapiFacade.GetEnrichedStarshipByIdAsync(id, ct);
+            EnrichedStarshipResponseDto starshipResponse = await _swapiFacade.GetEnrichedStarshipByIdAsync(id, ct);
                 return Ok(starshipResponse);
         }
     }

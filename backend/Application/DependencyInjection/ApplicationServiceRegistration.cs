@@ -2,6 +2,7 @@
 using Application.Interfaces;
 using Application.Services;
 using Application.Servicies;
+using Application.Strategies;
 using Application.Validators;
 using CorrelationId.Abstractions;
 using Domain.Models;
@@ -32,7 +33,14 @@ namespace StarWars.Application
                 var poolProvider = provider.GetRequiredService<ObjectPoolProvider>();
                 return poolProvider.Create(new ValidationHandlerPolicy(provider));
             });
-
+            //currency conversion strategy
+            services.AddTransient<UsdConversionStrategy>();
+            services.AddTransient<EurConversionStrategy>();
+            services.AddTransient<CurrencyConverter>(sp =>
+            {
+                var defaultStrategy = sp.GetRequiredService<UsdConversionStrategy>();
+                return new CurrencyConverter(defaultStrategy);
+            });
 
 
 

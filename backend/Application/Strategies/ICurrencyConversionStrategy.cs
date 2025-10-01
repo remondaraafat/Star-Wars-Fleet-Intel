@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 namespace Application.Strategies
 {
 
-    public interface ICostConversionStrategy
+    public interface ICurrencyConversionStrategy
     {
-        decimal? ConvertCost(string costInCredits, string targetCurrency);
+        decimal Convert(decimal galacticCredits);
+        string CurrencySymbol { get; }
     }
 }
