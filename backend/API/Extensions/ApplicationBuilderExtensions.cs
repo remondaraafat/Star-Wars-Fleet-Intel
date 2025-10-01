@@ -9,7 +9,7 @@
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "ShipConnect API v1");
-                c.RoutePrefix = string.Empty; // لو عايز Swagger يفتح على طول على / (الصفحة الرئيسية)
+                c.RoutePrefix = string.Empty;
             });
 
             return app;

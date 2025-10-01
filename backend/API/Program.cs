@@ -1,5 +1,4 @@
-﻿
-using API.Extensions;
+﻿using API.Extensions;
 using CorrelationId;
 using CorrelationId.DependencyInjection;
 using Infrastructure.DependencyInjection;

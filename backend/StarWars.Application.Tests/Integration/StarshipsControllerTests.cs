@@ -49,7 +49,6 @@ namespace StarWars.Application.Tests.Integration
         [Fact]
         public async Task GetStarshipById_ValidId_Should_ReturnOk()
         {
-            // Using id = 1 for simplicity; in real integration tests you may seed test data
             int validId = 2;
 
             var response = await _client.GetAsync($"/api/starships/{validId}");
