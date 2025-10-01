@@ -1,0 +1,35 @@
+<input
+  type="text"
+  placeholder="Search starships..."
+  [value]="searchTerm()"
+  (input)="onSearchChange($any($event.target).value)"
+  class="starship-list__search"
+/>
+
+<div class="starship-list__cards">
+  @for (starship of starships; track starship.id) {
+    <div class="starship-list__card" (click)="openDetail(starship)">
+      <h2>{{ starship.name }}</h2>
+      <p>Model: {{ starship.model }}</p>
+      <p>Manufacturer: {{ starship.manufacturer }}</p>
+      <p>Cost: {{ starship.costInCredits }} {{ starship.currencySymbol }} (Converted: {{ starship.convertedCost }})</p>
+      <p>Length: {{ starship.length }}</p>
+      <p>Crew: {{ starship.crew }}</p>
+      <p>Passengers: {{ starship.passengers }}</p>
+      <p>Max Speed: {{ starship.maxAtmospheringSpeed }}</p>
+      <p>Hyperdrive Rating: {{ starship.hyperdriveRating }}</p>
+      <p>MGLT: {{ starship.mglt }}</p>
+      <p>Cargo Capacity: {{ starship.cargoCapacity }}</p>
+      <p>Consumables: {{ starship.consumables }}</p>
+      
+    </div>
+  }
+</div>
+
+@if (starships.length === 0) {
+  <p class="starship-list__empty">No starships found.</p>
+}
+<app-starship-detail
+  [starship]="selectedStarship"
+  [isOpen]="isModalOpen">
+</app-starship-detail>

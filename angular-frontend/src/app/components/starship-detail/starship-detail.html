@@ -1,0 +1,32 @@
+@if (isOpen()){
+  <div class="modal-backdrop" (click)="closeModal()"></div>
+
+  <div class="modal">
+    <button class="modal__close" (click)="closeModal()">✖</button>
+    <h2>{{ starship()?.name }}</h2>
+    <p>Model: {{ starship()?.model }}</p>
+    <p>Manufacturer: {{ starship()?.manufacturer }}</p>
+    <p>Cost: {{ starship()?.costInCredits }} {{ starship()?.currencySymbol }} (Converted: {{ starship()?.convertedCost }})</p>
+    <p>Crew: {{ starship()?.crew }}</p>
+    <p>Passengers: {{ starship()?.passengers }}</p>
+    <p>Max Speed: {{ starship()?.maxAtmospheringSpeed }}</p>
+    <p>Hyperdrive Rating: {{ starship()?.hyperdriveRating }}</p>
+    <p>Shield Boost: {{ starship()?.shieldBoost }}</p>
+    <p>Targeting Accuracy: {{ starship()?.targetingAccuracy }}</p>
+
+    <h3>Films</h3>
+    <ul>
+      @for (film of starship()?.films; track film.id) {
+        <li>{{ film.title }} (Episode {{ film.episode_id }})</li>
+      }
+    </ul>
+
+    <h3>Pilots</h3>
+    <ul>
+      @for (pilot of starship()?.pilots; track pilot.id) {
+        <li>{{ pilot.name }} - {{ pilot.gender }}</li>
+      }
+    </ul>
+  </div>
+<p>starship-detail works!</p>
+}
