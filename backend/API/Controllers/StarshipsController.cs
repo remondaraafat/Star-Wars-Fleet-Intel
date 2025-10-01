@@ -1,5 +1,5 @@
 ﻿using Application.Servicies;
-using Domain.Models;
+using Domain.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,9 +25,9 @@ namespace API.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<EnrichedStarshipResponseDto>> GetStarshipById(int id, CancellationToken ct = default)
+        public async Task<ActionResult<GetEnrichedStarshipDto>> GetStarshipById(int id, CancellationToken ct = default)
         {
-            EnrichedStarshipResponseDto starshipResponse = await _swapiFacade.GetEnrichedStarshipByIdAsync(id, ct);
+            GetEnrichedStarshipDto starshipResponse = await _swapiFacade.GetEnrichedStarshipByIdAsync(id, ct);
                 return Ok(starshipResponse);
         }
     }

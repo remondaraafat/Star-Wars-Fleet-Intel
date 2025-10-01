@@ -1,21 +1,21 @@
-﻿using Domain.Models;
-using FluentValidation;
+﻿using FluentValidation;
 using System.Linq;
 using System.Globalization;
 using Application.ChainHandler;
+using Domain.DTOs;
 
 namespace Application.Validators
 {
     public class ValidationHandler : StarshipHandlerBase
     {
-        private readonly IValidator<Starship> _validator;
+        private readonly IValidator<StarshipRequestDto> _validator;
 
-        public ValidationHandler(IValidator<Starship> validator)
+        public ValidationHandler(IValidator<StarshipRequestDto> validator)
         {
             _validator = validator;
         }
 
-        public override async Task<IEnumerable<Starship>> HandleAsync(IEnumerable<Starship> starships, CancellationToken ct)
+        public override async Task<IEnumerable<StarshipRequestDto>> HandleAsync(IEnumerable<StarshipRequestDto> starships, CancellationToken ct)
         {
             foreach (var ship in starships)
             {

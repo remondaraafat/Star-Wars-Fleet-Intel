@@ -1,4 +1,4 @@
-﻿using Domain.Models;
+﻿using Domain.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +9,7 @@ namespace Application.ChainHandler
 {
     public class SanitizationHandler : StarshipHandlerBase
     {
-        public override Task<IEnumerable<Starship>> HandleAsync(IEnumerable<Starship> starships, CancellationToken ct)
+        public override Task<IEnumerable<StarshipRequestDto>> HandleAsync(IEnumerable<StarshipRequestDto> starships, CancellationToken ct)
         {
             foreach (var starship in starships)
             {

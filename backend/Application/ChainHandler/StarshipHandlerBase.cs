@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Domain.Models;
+using Domain.DTOs;
 using FluentValidation;
 using FluentValidation.Results;
 namespace Application.ChainHandler
@@ -19,7 +19,7 @@ namespace Application.ChainHandler
             return next;
         }
 
-        public virtual async Task<IEnumerable<Starship>> HandleAsync(IEnumerable<Starship> starships, CancellationToken ct)
+        public virtual async Task<IEnumerable<StarshipRequestDto>> HandleAsync(IEnumerable<StarshipRequestDto> starships, CancellationToken ct)
         {
             if (_next is not null)
                 return await _next.HandleAsync(starships, ct);

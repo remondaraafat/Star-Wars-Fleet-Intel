@@ -6,9 +6,9 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace Domain.Models
+namespace Domain.DTOs
 {
-    public class FilmDto:BaseEntity
+    public class GetFilmDto:BaseEntity
     {
 
         [JsonPropertyName("title")]

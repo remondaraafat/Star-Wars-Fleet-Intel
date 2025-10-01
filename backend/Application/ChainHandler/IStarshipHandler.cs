@@ -1,4 +1,4 @@
-﻿using Domain.Models;
+﻿using Domain.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +10,7 @@ namespace Application.ChainHandler
 
     public interface IStarshipHandler
     {
-        Task<IEnumerable<Starship>> HandleAsync(IEnumerable<Starship> starships, CancellationToken ct = default);
+        Task<IEnumerable<StarshipRequestDto>> HandleAsync(IEnumerable<StarshipRequestDto> starships, CancellationToken ct = default);
         IStarshipHandler SetNext(IStarshipHandler next);
     }
 }

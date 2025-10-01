@@ -4,6 +4,7 @@ using Application.Servicies;
 using Application.Strategies;
 using Application.Validators;
 using CorrelationId.Abstractions;
+using Domain.DTOs;
 using Domain.Models;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
@@ -20,7 +21,7 @@ namespace Application.Services
     {
         private readonly ISwapiClient _client;
         private readonly ILogger<SwapiFacadeService> _logger;
-        private readonly IValidator<Starship> _validator;
+        private readonly IValidator<StarshipRequestDto> _validator;
         private readonly ICorrelationContextAccessor _correlationAccessor;
         private readonly ObjectPool<ValidationHandler> _validationPool;
         private readonly CurrencyConverter _converter;
@@ -29,7 +30,7 @@ namespace Application.Services
         public SwapiFacadeService(
             ISwapiClient client,
             ILogger<SwapiFacadeService> logger,
-            IValidator<Starship> validator,
+            IValidator<StarshipRequestDto> validator,
             ObjectPool<ValidationHandler> validationPool,
             ICorrelationContextAccessor correlationAccessor,
             CurrencyConverter converter,
@@ -69,7 +70,7 @@ namespace Application.Services
                 var validatorHandler = _validationPool.Get();
                 sanitizer.SetNext(validatorHandler);
 
-                IEnumerable<Starship> processed;
+                IEnumerable<StarshipRequestDto> processed;
                 try
                 {
                     processed = await sanitizer.HandleAsync(starships, ct);
@@ -117,7 +118,7 @@ namespace Application.Services
             }
         }
 
-        public async Task<EnrichedStarshipResponseDto> GetEnrichedStarshipByIdAsync(int id, CancellationToken ct = default)
+        public async Task<GetEnrichedStarshipDto> GetEnrichedStarshipByIdAsync(int id, CancellationToken ct = default)
         {
             using var scope = _logger.BeginScope(new Dictionary<string, object>
             {
@@ -199,7 +200,7 @@ namespace Application.Services
                 }
 
                 // Map enriched -> DTO
-                var responseDto = new EnrichedStarshipResponseDto
+                var responseDto = new GetEnrichedStarshipDto
                 {
                     Name = enriched.Name,
                     Model = enriched.Model,
@@ -218,7 +219,7 @@ namespace Application.Services
                     Url = enriched.Url,
                     ShieldBoost = enriched.ShieldBoost,
                     TargetingAccuracy = enriched.TargetingAccuracy,
-                    Pilots = enriched.ResolvedPilots.Select(p => new PersonDto
+                    Pilots = enriched.ResolvedPilots.Select(p => new GetPersonDto
                     {
                         Name = p.Name,
                         BirthYear = p.BirthYear,
@@ -233,7 +234,7 @@ namespace Application.Services
                         Edited = p.Edited,
                         Url = p.Url
                     }).ToList(),
-                    Films = enriched.ResolvedFilms.Select(f => new FilmDto
+                    Films = enriched.ResolvedFilms.Select(f => new GetFilmDto
                     {
                         Title = f.Title,
                         EpisodeId = f.EpisodeId,

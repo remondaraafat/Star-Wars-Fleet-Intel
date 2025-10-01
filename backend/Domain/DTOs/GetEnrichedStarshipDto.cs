@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain.Models
+namespace Domain.DTOs
 {
-    public class GetStarshipsDto: BaseEntity
+    public class GetEnrichedStarshipDto : BaseEntity
     {
         public string Name { get; set; }
         public string Model { get; set; }
@@ -21,8 +21,13 @@ namespace Domain.Models
         public string MGLT { get; set; }
         public string CargoCapacity { get; set; }
         public string Consumables { get; set; }
+        public List<GetFilmDto> Films { get; set; }
+        public List<GetPersonDto> Pilots { get; set; }
+        //currency conversion outputs
         public string CurrencySymbol { get; set; }
         public decimal ConvertedCost { get; set; }
+        // Decorator outputs
+        public int ShieldBoost { get; set; } = 0;
+        public int TargetingAccuracy { get; set; } = 0;
     }
 }
-

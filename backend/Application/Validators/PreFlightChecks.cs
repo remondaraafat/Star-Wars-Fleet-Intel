@@ -1,10 +1,10 @@
-﻿using Domain.Models;
+﻿using Domain.DTOs;
 using FluentValidation;
 using System.Linq;
 
 namespace Application.Validators
 {
-    public class PreFlightChecks : AbstractValidator<Starship>
+    public class PreFlightChecks : AbstractValidator<StarshipRequestDto>
     {
         private static readonly string[] AllowedUnknowns = { "unknown", "none", "n/a" };
 

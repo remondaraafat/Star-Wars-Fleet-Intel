@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces;
 using CorrelationId.Abstractions;
+using Domain.DTOs;
 using Domain.Exceptions;
 using Domain.Models;
 using global::Infrastructure.SwapiProvider;
@@ -40,7 +41,7 @@ namespace Infrastructure.Client
         }
 
 
-        public async Task<IEnumerable<Starship>> GetStarshipsAsync(string endpoint, CancellationToken ct = default)
+        public async Task<IEnumerable<StarshipRequestDto>> GetStarshipsAsync(string endpoint, CancellationToken ct = default)
         {
             using var scope = _logger.BeginScope(new Dictionary<string, object>
             {
@@ -75,10 +76,10 @@ namespace Infrastructure.Client
                 }
                 var content = await response.Content.ReadAsStringAsync(ct);
 
-                var result = JsonSerializer.Deserialize<SwapiListResponse<Starship>>(content,
+                var result = JsonSerializer.Deserialize<SwapiListResponse<StarshipRequestDto>>(content,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                return result?.Results ?? Enumerable.Empty<Starship>();
+                return result?.Results ?? Enumerable.Empty<StarshipRequestDto>();
             }
             catch (HttpRequestException ex)
             {
@@ -87,7 +88,7 @@ namespace Infrastructure.Client
             }
         }
 
-        public async Task<Starship> GetStarshipByIdAsync(int id, CancellationToken ct = default)
+        public async Task<StarshipRequestDto> GetStarshipByIdAsync(int id, CancellationToken ct = default)
         {
             var endpoint = $"starships/{id}/";
             using var scope = _logger.BeginScope(new Dictionary<string, object>
@@ -122,7 +123,7 @@ namespace Infrastructure.Client
                 }
 
                 var content = await response.Content.ReadAsStringAsync(ct);
-                var result = JsonSerializer.Deserialize<Starship>(content,
+                var result = JsonSerializer.Deserialize<StarshipRequestDto>(content,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
                 if (result == null)

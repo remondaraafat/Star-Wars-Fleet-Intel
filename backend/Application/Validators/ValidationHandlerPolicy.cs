@@ -1,5 +1,5 @@
 ﻿using Application.ChainHandler;
-using Domain.Models;
+using Domain.DTOs;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.ObjectPool;
@@ -22,7 +22,7 @@ namespace Application.Validators
 
         public override ValidationHandler Create()
         {
-            var validator = _provider.GetRequiredService<IValidator<Starship>>();
+            var validator = _provider.GetRequiredService<IValidator<StarshipRequestDto>>();
             return new ValidationHandler(validator);
         }
 

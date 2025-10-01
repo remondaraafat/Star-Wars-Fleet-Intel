@@ -7,13 +7,14 @@ using static ServiceStack.Svg;
 using Bogus;
 using Domain.Models;
 using Person = Domain.Models.Person;
+using Domain.DTOs;
 namespace Infrastructure.SwapiProvider
 {
     public class FakeSwapiProvider : IFakeSwapiProvider
     {
-        public async Task<IEnumerable<Starship>> GenerateFakeStarshipsAsync(string? search, CancellationToken ct = default)
+        public async Task<IEnumerable<StarshipRequestDto>> GenerateFakeStarshipsAsync(string? search, CancellationToken ct = default)
         {
-            var faker = new Faker<Starship>()
+            var faker = new Faker<StarshipRequestDto>()
                 .RuleFor(s => s.Name, f => f.Vehicle.Model())
                 .RuleFor(s => s.Model, f => f.Vehicle.Type())
                 .RuleFor(s => s.Manufacturer, f => f.Company.CompanyName())
@@ -37,9 +38,9 @@ namespace Infrastructure.SwapiProvider
             return await Task.FromResult(starships);
         }
 
-        public async Task<Starship> GenerateFakeStarshipAsync(int id, CancellationToken ct = default)
+        public async Task<StarshipRequestDto> GenerateFakeStarshipAsync(int id, CancellationToken ct = default)
         {
-            var faker = new Faker<Starship>()
+            var faker = new Faker<StarshipRequestDto>()
                 .RuleFor(s => s.Name, f => f.Vehicle.Model())
                 .RuleFor(s => s.Model, f => f.Vehicle.Type())
                 .RuleFor(s => s.Manufacturer, f => f.Company.CompanyName())

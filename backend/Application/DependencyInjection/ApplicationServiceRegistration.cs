@@ -5,7 +5,7 @@ using Application.Servicies;
 using Application.Strategies;
 using Application.Validators;
 using CorrelationId.Abstractions;
-using Domain.Models;
+using Domain.DTOs;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Configuration;
@@ -25,7 +25,7 @@ namespace StarWars.Application
 
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
             services.AddSingleton<ISwapiFacadeService, SwapiFacadeService>();
-            services.AddSingleton<IValidator<Starship>, PreFlightChecks>();
+            services.AddSingleton<IValidator<StarshipRequestDto>, PreFlightChecks>();
             services.AddSingleton<IStarshipHandler, ValidationHandler>();
             services.AddSingleton<ObjectPoolProvider, DefaultObjectPoolProvider>();
             services.AddSingleton<ObjectPool<ValidationHandler>>(provider =>
